@@ -1,6 +1,8 @@
 package com.example.retrysystem.api;
 
+import com.example.retrysystem.dto.MyPayload;
 import com.example.retrysystem.entity.WebhookEvent;
+import com.example.retrysystem.service.RetryMessageProducer;
 import com.example.retrysystem.service.WebhookEventService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -16,9 +19,11 @@ import java.util.Map;
 public class WebhookController {
 
     private final WebhookEventService service;
+    private final RetryMessageProducer retryMessageProducer;
 
-    public WebhookController(WebhookEventService service) {
+    public WebhookController(WebhookEventService service, RetryMessageProducer retryMessageProducer) {
         this.service = service;
+        this.retryMessageProducer = retryMessageProducer;
     }
 
     @PostMapping("/payment")
@@ -27,16 +32,11 @@ public class WebhookController {
         String eventType = (String) payload.get("eventType");
 
         WebhookEvent event = new WebhookEvent();
-        event.setEventId(eventId);
         event.setEventType(eventType);
+        event.setEventId(eventId);
         event.setPayload(payload.toString());
 
-        try {
-            service.processEvent(event);
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Event already processed");
-        }
-
-        return ResponseEntity.ok("Event received");
+        retryMessageProducer.sendToQueue(event); // 🟢 Kuyruğa at
+        return ResponseEntity.ok("Event queued");
     }
 }

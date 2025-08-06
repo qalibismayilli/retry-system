@@ -18,7 +18,7 @@ public class WebhookEvent {
     @Column(name = "event_type")
     private String eventType;
 
-    @Column(name = "payload", columnDefinition = "jsonb")
+    @Column(name = "payload")
     private String payload;
 
     @Column(name = "status")
@@ -28,8 +28,19 @@ public class WebhookEvent {
     private Integer retries = 0;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
