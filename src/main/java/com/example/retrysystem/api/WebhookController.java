@@ -36,7 +36,7 @@ public class WebhookController {
         event.setEventId(eventId);
         event.setPayload(payload.toString());
 
-        retryMessageProducer.sendToQueue(event); // 🟢 Kuyruğa at
+        retryMessageProducer.sendToQueue(event);
         return ResponseEntity.ok("Event queued");
     }
 }
